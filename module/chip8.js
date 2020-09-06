@@ -1,3 +1,9 @@
+import Graphics from './graphics.js';
+import Keyboard from './keyboard.js';
+
+const graphics = new Graphics(15);
+const keyboard = new Keyboard();
+
 class Chip8 {
 	constructor(starting_program) {
 		// Create our memory with 4,096 bytes
@@ -15,27 +21,6 @@ class Chip8 {
 		this.ST = 0;
 		this.DT = 0;
 
-		this.chip8keys = new Uint16Array(16);
-		this.userKeys = [
-			'1',
-			'2',
-			'3',
-			'4',
-			'q',
-			'w',
-			'e',
-			'r',
-			'a',
-			's',
-			'd',
-			'f',
-			'z',
-			'x',
-			'c',
-			'v',
-		];
-		this.isTriggered = false;
-
 		// load the starting program into memory starting at address 0
 		for (let i = 0; i < starting_program.length; ++i) {
 			this.memory[0x200 + i] = starting_program[i];
@@ -44,33 +29,15 @@ class Chip8 {
 
 	run() {
 		var should_run = true;
+
 		while (should_run) {
+			console.log(this.pc);
+			console.log(this.memory.slice(0x200));
+			console.log(this.registers);
 			should_run = this.dispatch();
-			this.eventHandler();
+			keyboard.eventHandler();
 		}
 	}
-
-	eventHandler = () => {
-		document.addEventListener('keydown', (e) => {
-			if (this.userKeys.includes(e.key)) {
-				const keyIndex = this.userKeys.indexOf(e.key);
-				this.chip8keys[keyIndex] = 1;
-				console.log(this.chip8keys);
-			} else {
-				return;
-			}
-		});
-
-		document.addEventListener('keyup', (e) => {
-			if (this.userKeys.includes(e.key)) {
-				const keyIndex = this.userKeys.indexOf(e.key);
-				this.chip8keys[keyIndex] = 0;
-				console.log(this.chip8keys);
-			} else {
-				return;
-			}
-		});
-	};
 
 	dispatch() {
 		const first_byte = this.memory[this.pc];
@@ -99,6 +66,7 @@ class Chip8 {
 			case 0x0:
 				if (last_three_nibbles === 0x0e0) {
 					//Clear the display.
+					graphics.clear();
 				} else if (last_three_nibbles === 0x0ee) {
 					//The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 					this.pc = this.stack[this.stackpointer];
@@ -176,10 +144,10 @@ class Chip8 {
 							this.registers[second_nibble] +
 							this.registers[third_nibble];
 						if (added > 255) {
-							this.registers[15] = 1;
+							this.registers[0xf] = 1;
 							this.registers[second_nibble] = added % 255;
 						} else {
-							this.registers[15] = 0;
+							this.registers[0xf] = 0;
 							this.registers[second_nibble] = added;
 						}
 						break;
@@ -189,9 +157,9 @@ class Chip8 {
 							this.registers[second_nibble] >
 							this.registers[third_nibble]
 						) {
-							this.registers[15] = 1;
+							this.registers[0xf] = 1;
 						} else {
-							this.registers[15] = 0;
+							this.registers[0xf] = 0;
 						}
 						this.registers[second_nibble] -= this.registers[
 							third_nibble
@@ -206,9 +174,9 @@ class Chip8 {
 							) &
 							(1 === 1)
 						) {
-							this.registers[15] = 1;
+							this.registers[0xf] = 1;
 						} else {
-							this.registers[15] = 0;
+							this.registers[0xf] = 0;
 						}
 						this.registers[second_nibble] /= 2;
 						break;
@@ -218,9 +186,9 @@ class Chip8 {
 							this.registers[third_nibble] >
 							this.registers[second_nibble]
 						) {
-							this.registers[15] = 1;
+							this.registers[0xf] = 1;
 						} else {
-							this.registers[15] = 0;
+							this.registers[0xf] = 0;
 						}
 						this.registers[second_nibble] =
 							this.registers[third_nibble] -
@@ -229,9 +197,9 @@ class Chip8 {
 					case 0xe:
 						//If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
 						if ((this.registers[second_nibble] & 0xff) >> 7 === 1) {
-							this.registers[15] = 1;
+							this.registers[0xf] = 1;
 						} else {
-							this.registers[15] = 0;
+							this.registers[0xf] = 0;
 						}
 						this.registers[second_nibble] *= 2;
 
@@ -267,19 +235,52 @@ class Chip8 {
 				break;
 			case 0xd:
 				//Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+				// If the sprite is positioned so part of it is outside the coordinates of the display,
+				// it wraps around to the opposite side of the screen
+				for (
+					let i = this.registerI[0];
+					i < this.registerI[0] + this.registers[fourth_nibble];
+					i++
+				) {
+					let x = this.registers[second_nibble];
+					let y = this.registers[third_nibble];
+					if (x > 64) {
+						x -= 64;
+					} else if (x < 64) {
+						x += 64;
+					}
+					if (y > 32) {
+						y -= 32;
+					} else if (y < 32) {
+						y += 32;
+					}
+					let pixelLocation = x + y * 64;
+
+					graphics.display[pixelLocation] ^= 1;
+					if (!graphics.display[pixelLocation]) {
+						this.registers[0xf] = 1;
+					} else {
+						this.registers[0xf] = 0;
+					}
+				}
+
 				break;
 			case 0xe:
 				if (last_two_nibbles === 0x9e) {
 					//Ex9E Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
 					if (
-						this.chip8keys[this.registers[second_nibble] - 1] === 1
+						keyboard.chip8keys[
+							this.registers[second_nibble] - 1
+						] === 1
 					) {
 						this.pc += 2;
 					}
 				} else if (last_two_nibbles === 0xa1) {
 					//ExA1 Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
 					if (
-						this.chip8keys[this.registers[second_nibble] - 1] === 0
+						keyboard.chip8keys[
+							this.registers[second_nibble] - 1
+						] === 0
 					) {
 						this.pc += 2;
 					}
@@ -303,11 +304,11 @@ class Chip8 {
 							});
 						}
 						break;
-					case 15:
+					case 0x15:
 						//DT is set equal to the value of Vx.
 						this.DT = this.registers[second_nibble];
 						break;
-					case 18:
+					case 0x18:
 						//Set sound timer = Vx.
 						this.ST = this.registers[second_nibble];
 						break;
@@ -316,8 +317,11 @@ class Chip8 {
 						this.registerI[0] += this.registers[second_nibble];
 						break;
 					case 0x29:
-						//The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx. See section 2.4, Display, for more information on the Chip-8 hexadecimal font.
-
+						//Set I = location of sprite for digit Vx.
+						//Fx29 The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx
+						this.registerI[0] = graphics.display.indexOf(
+							this.registers[second_nibble]
+						);
 						break;
 					case 0x33:
 						//Store BCD representation of Vx in memory locations I, I+1, and I+2.
@@ -356,34 +360,13 @@ class Chip8 {
 			default:
 				throw 'unrecognized instruction ' + full_instruction;
 		}
-
 		return true;
 	}
 }
 
-var hello_world_program = [
-	0xf2,
-	0x33, // load 0x06 into A
-	0x40,
-	0x00, // print string at A
-	0xff,
-	0xff, // terminate program
-	// string literal "Hello, world!" in ASCII
-	0x48,
-	0x65,
-	0x6c,
-	0x6c,
-	0x6f,
-	0x2c,
-	0x20,
-	0x77,
-	0x6f,
-	0x72,
-	0x6c,
-	0x64,
-	0x21,
-	0x00,
-];
+var test = [0xd2, 0x34, 0x7e, 0x01, 0xff, 0xff];
 
-var vm = new Chip8(hello_world_program);
-vm.dispatch();
+var vm = new Chip8(test);
+vm.run();
+graphics.testRender();
+graphics.render();
