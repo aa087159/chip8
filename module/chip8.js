@@ -5,7 +5,7 @@ const graphics = new Graphics(15);
 const keyboard = new Keyboard();
 
 class Chip8 {
-	constructor(starting_program) {
+	constructor() {
 		// Create our memory with 4,096 bytes
 		this.memory = new Uint8Array(4096);
 		// Program counter, where we get our instructions from
@@ -20,26 +20,134 @@ class Chip8 {
 		//sound timer and delay timer
 		this.ST = 0;
 		this.DT = 0;
+		const sprites = [
+			0xf0,
+			0x90,
+			0x90,
+			0x90,
+			0xf0, // 0
+			0x20,
+			0x60,
+			0x20,
+			0x20,
+			0x70, // 1
+			0xf0,
+			0x10,
+			0xf0,
+			0x80,
+			0xf0, // 2
+			0xf0,
+			0x10,
+			0xf0,
+			0x10,
+			0xf0, // 3
+			0x90,
+			0x90,
+			0xf0,
+			0x10,
+			0x10, // 4
+			0xf0,
+			0x80,
+			0xf0,
+			0x10,
+			0xf0, // 5
+			0xf0,
+			0x80,
+			0xf0,
+			0x90,
+			0xf0, // 6
+			0xf0,
+			0x10,
+			0x20,
+			0x40,
+			0x40, // 7
+			0xf0,
+			0x90,
+			0xf0,
+			0x90,
+			0xf0, // 8
+			0xf0,
+			0x90,
+			0xf0,
+			0x10,
+			0xf0, // 9
+			0xf0,
+			0x90,
+			0xf0,
+			0x90,
+			0x90, // A
+			0xe0,
+			0x90,
+			0xe0,
+			0x90,
+			0xe0, // B
+			0xf0,
+			0x80,
+			0x80,
+			0x80,
+			0xf0, // C
+			0xe0,
+			0x90,
+			0x90,
+			0x90,
+			0xe0, // D
+			0xf0,
+			0x80,
+			0xf0,
+			0x80,
+			0xf0, // E
+			0xf0,
+			0x80,
+			0xf0,
+			0x80,
+			0x80, // F
+		];
 
-		// load the starting program into memory starting at address 0
-		for (let i = 0; i < starting_program.length; ++i) {
-			this.memory[0x200 + i] = starting_program[i];
+		//load sprite
+		for (let i = 0; i < sprites.length; i++) {
+			this.memory[i] = sprites[i];
 		}
 	}
 
-	run() {
+	run = () => {
 		var should_run = true;
 
 		while (should_run) {
 			console.log(this.pc);
-			console.log(this.memory.slice(0x200));
+			//console.log(this.memory.slice(0x200));
+			console.log(this.memory);
 			console.log(this.registers);
 			should_run = this.dispatch();
 			keyboard.eventHandler();
 		}
+	};
+
+	loadRom(romName) {
+		var request = new XMLHttpRequest();
+		request.onload = () => {
+			// If the request response has content
+			if (request.response) {
+				let program = new Uint8Array(request.response);
+
+				// load the starting program into memory starting at address 0
+				for (let i = 0; i < program.length; i++) {
+					this.memory[0x200 + i] = program[i];
+				}
+				console.log(this.memory);
+			}
+		};
+
+		// Initialize a GET request to retrieve the ROM from our roms folder
+		request.open('GET', '../' + romName);
+		request.responseType = 'arraybuffer';
+		request.send();
 	}
 
-	dispatch() {
+	init() {
+		this.loadRom('BLITZ');
+	}
+
+	dispatch = () => {
 		const first_byte = this.memory[this.pc];
 		const second_byte = this.memory[this.pc + 1];
 		const full_instruction = (first_byte << 8) | second_byte;
@@ -319,9 +427,8 @@ class Chip8 {
 					case 0x29:
 						//Set I = location of sprite for digit Vx.
 						//Fx29 The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx
-						this.registerI[0] = graphics.display.indexOf(
-							this.registers[second_nibble]
-						);
+
+						this.registerI[0] = this.registers[second_nibble] * 5;
 						break;
 					case 0x33:
 						//Store BCD representation of Vx in memory locations I, I+1, and I+2.
@@ -361,12 +468,10 @@ class Chip8 {
 				throw 'unrecognized instruction ' + full_instruction;
 		}
 		return true;
-	}
+	};
 }
 
 var test = [0xd2, 0x34, 0x7e, 0x01, 0xff, 0xff];
 
-var vm = new Chip8(test);
-vm.run();
-graphics.testRender();
-graphics.render();
+var vm = new Chip8();
+vm.init();
