@@ -5,7 +5,7 @@ const graphics = new Graphics(15);
 const keyboard = new Keyboard();
 
 class Chip8 {
-	constructor() {
+	constructor(test) {
 		// Create our memory with 4,096 bytes
 		this.memory = new Uint8Array(4096);
 		// Program counter, where we get our instructions from
@@ -107,20 +107,10 @@ class Chip8 {
 		for (let i = 0; i < sprites.length; i++) {
 			this.memory[i] = sprites[i];
 		}
-	}
-
-	run = () => {
-		var should_run = true;
-
-		while (should_run) {
-			console.log(this.pc);
-			//console.log(this.memory.slice(0x200));
-			console.log(this.memory);
-			console.log(this.registers);
-			should_run = this.dispatch();
-			keyboard.eventHandler();
+		for (let i = 0; i < test.length; i++) {
+			this.memory[0x200 + i] = test[i];
 		}
-	};
+	}
 
 	loadRom(romName) {
 		var request = new XMLHttpRequest();
@@ -131,9 +121,11 @@ class Chip8 {
 
 				// load the starting program into memory starting at address 0
 				for (let i = 0; i < program.length; i++) {
+					if (i % 10 === 0) {
+						graphics.render();
+					}
 					this.memory[0x200 + i] = program[i];
 				}
-				console.log(this.memory);
 			}
 		};
 
@@ -143,9 +135,22 @@ class Chip8 {
 		request.send();
 	}
 
-	init() {
-		this.loadRom('BLITZ');
-	}
+	run = () => {
+		//this.loadRom('PONG');
+		var should_run = true;
+
+		//console.log(this.memory.slice(0x200));
+		for (let i = 0; i < 1; i++) {
+			this.dispatch();
+			graphics.render();
+		}
+		// while (should_run) {
+		// 	should_run = this.dispatch();
+		// 	graphics.render();
+		// }
+		//this.dispatch();
+		//keyboard.eventHandler();
+	};
 
 	dispatch = () => {
 		const first_byte = this.memory[this.pc];
@@ -345,30 +350,48 @@ class Chip8 {
 				//Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
 				// If the sprite is positioned so part of it is outside the coordinates of the display,
 				// it wraps around to the opposite side of the screen
-				for (
-					let i = this.registerI[0];
-					i < this.registerI[0] + this.registers[fourth_nibble];
-					i++
-				) {
-					let x = this.registers[second_nibble];
-					let y = this.registers[third_nibble];
-					if (x > 64) {
-						x -= 64;
-					} else if (x < 64) {
-						x += 64;
-					}
-					if (y > 32) {
-						y -= 32;
-					} else if (y < 32) {
-						y += 32;
-					}
-					let pixelLocation = x + y * 64;
 
-					graphics.display[pixelLocation] ^= 1;
-					if (!graphics.display[pixelLocation]) {
-						this.registers[0xf] = 1;
-					} else {
-						this.registers[0xf] = 0;
+				let spriteHeight = fourth_nibble;
+				let Vx = this.registers[second_nibble];
+				let Vy = this.registers[third_nibble];
+
+				if (Vx > 64) {
+					Vx -= 64;
+				} else if (Vx < 64) {
+					Vx += 64;
+				}
+				if (Vy > 32) {
+					Vy -= 32;
+				} else if (Vy < 32) {
+					Vy += 32;
+				}
+				console.log(Vx);
+				console.log(Vy);
+				//n-byte
+				for (let i = 0; i < spriteHeight; i++) {
+					let currentByte = this.memory[this.registerI[0] + i];
+
+					//loop through the byte
+					for (let bit = 0; bit < 8; bit++) {
+						console.log(Vx + bit + (Vy + i));
+
+						let currentBit = (currentByte & 0xff) >> 7;
+						if (currentBit != 0) {
+							if (
+								graphics.display[
+									Vx + bit + (Vy + i - 1) * 64
+								] === 1
+							) {
+								this.registers[0xf] = 1;
+							} else {
+								this.registers[0xf] = 0;
+							}
+						}
+						graphics.display[Vx + bit + (Vy + i - 1) * 64] ^= 1;
+
+						//graphics.render();
+
+						currentByte << 1;
 					}
 				}
 
@@ -471,7 +494,9 @@ class Chip8 {
 	};
 }
 
-var test = [0xd2, 0x34, 0x7e, 0x01, 0xff, 0xff];
+var test = [0xd5, 0x35, 0xff, 0xff];
 
-var vm = new Chip8();
-vm.init();
+var vm = new Chip8(test);
+vm.run();
+// graphics.testRender();
+// graphics.render();

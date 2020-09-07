@@ -19,13 +19,15 @@ class Graphics {
 	placePixel(x, y) {
 		let pixelLocation = x + y * this.cols;
 		this.display[pixelLocation] ^= 1;
-		return this.display[pixelLocation];
+		//return this.display[pixelLocation];
 	}
 
 	render() {
 		// loop through display
 		for (let i = 0; i < this.cols * this.rows; i++) {
+			console.log(this.display);
 			if (this.display[i]) {
+				console.log('fill');
 				this.ctx.fillStyle = '#000';
 				this.ctx.fillRect(
 					(i % this.cols) * this.scale,
