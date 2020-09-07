@@ -107,9 +107,9 @@ class Chip8 {
 		for (let i = 0; i < sprites.length; i++) {
 			this.memory[i] = sprites[i];
 		}
-		for (let i = 0; i < test.length; i++) {
-			this.memory[0x200 + i] = test[i];
-		}
+		// for (let i = 0; i < test.length; i++) {
+		// 	this.memory[0x200 + i] = test[i];
+		// }
 	}
 
 	loadRom(romName) {
@@ -135,15 +135,25 @@ class Chip8 {
 		request.send();
 	}
 
-	run = () => {
-		//this.loadRom('PONG');
-		var should_run = true;
+	run = async () => {
+		this.loadRom('test_opcode.ch8');
+		await sleep(1000);
+		function sleep(ms) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		}
 
-		//console.log(this.memory.slice(0x200));
-		for (let i = 0; i < 1; i++) {
-			this.dispatch();
+		for (let j = 0; j < 50000; j++) {
+			for (let i = 0; i < 10; i++) {
+				this.dispatch();
+			}
+			await sleep(5);
 			graphics.render();
 		}
+		//var should_run = true;
+		// for (let i = 0; i < 1; i++) {
+		// 	this.dispatch();
+		// 	graphics.render();
+		// }
 		// while (should_run) {
 		// 	should_run = this.dispatch();
 		// 	graphics.render();
@@ -352,46 +362,32 @@ class Chip8 {
 				// it wraps around to the opposite side of the screen
 
 				let spriteHeight = fourth_nibble;
-				let Vx = this.registers[second_nibble];
-				let Vy = this.registers[third_nibble];
+				let x = this.registers[second_nibble];
+				let y = this.registers[third_nibble];
 
-				if (Vx > 64) {
-					Vx -= 64;
-				} else if (Vx < 64) {
-					Vx += 64;
-				}
-				if (Vy > 32) {
-					Vy -= 32;
-				} else if (Vy < 32) {
-					Vy += 32;
-				}
-				console.log(Vx);
-				console.log(Vy);
 				//n-byte
 				for (let i = 0; i < spriteHeight; i++) {
 					let currentByte = this.memory[this.registerI[0] + i];
-
+					y += 1;
+					if (y > 32) {
+						y -= 32;
+					}
+					x += 1;
 					//loop through the byte
 					for (let bit = 0; bit < 8; bit++) {
-						console.log(Vx + bit + (Vy + i));
-
-						let currentBit = (currentByte & 0xff) >> 7;
-						if (currentBit != 0) {
-							if (
-								graphics.display[
-									Vx + bit + (Vy + i - 1) * 64
-								] === 1
-							) {
-								this.registers[0xf] = 1;
-							} else {
-								this.registers[0xf] = 0;
-							}
+						if (x > 64) {
+							x -= 64;
 						}
-						graphics.display[Vx + bit + (Vy + i - 1) * 64] ^= 1;
+
+						let currentBit = (currentByte >> (7 - bit)) & 1;
+
+						if (currentBit !== 0) {
+							this.registers[0xf] = graphics.display[x + y * 64];
+						}
+
+						graphics.display[x + y * 64] ^= currentBit;
 
 						//graphics.render();
-
-						currentByte << 1;
 					}
 				}
 

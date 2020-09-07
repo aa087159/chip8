@@ -24,24 +24,29 @@ class Graphics {
 
 	render() {
 		// loop through display
-		for (let i = 0; i < this.cols * this.rows; i++) {
-			console.log(this.display);
-			if (this.display[i]) {
-				console.log('fill');
-				this.ctx.fillStyle = '#000';
-				this.ctx.fillRect(
-					(i % this.cols) * this.scale,
-					Math.floor((i / this.cols) * this.scale),
-					this.scale,
-					this.scale
-				);
+		for (let y = 0; y < this.rows; y++) {
+			for (let x = 0; x < this.cols; x++) {
+				let i = x + y * this.cols;
+				if (this.display[i]) {
+					this.ctx.fillStyle = '#000';
+					this.ctx.fillRect(
+						x * this.scale,
+						y * this.scale,
+						this.scale,
+						this.scale
+					);
+				}
 			}
 		}
 	}
 
 	testRender() {
-		this.placePixel(0, 0);
-		this.placePixel(15, 2);
+		for (let i = 0; i < 10; i++) {
+			this.placePixel(i + 5, 5);
+		}
+
+		// this.placePixel(0, 0);
+		// this.placePixel(15, 2);
 	}
 }
 
