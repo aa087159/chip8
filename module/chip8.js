@@ -263,16 +263,18 @@ class Chip8 {
 						break;
 					case 4:
 						//Set Vx = Vx + Vy, set VF = carry.
+						//The values of Vx and Vy are added together.
+						//If the result is greater than 8 bits (i.e., > 255,) VF is set to 1, otherwise 0.
+						//Only the lowest 8 bits of the result are kept, and stored in Vx.
 						let added =
 							this.registers[second_nibble] +
 							this.registers[third_nibble];
 						if (added > 255) {
 							this.registers[0xf] = 1;
-							this.registers[second_nibble] = added % 255;
 						} else {
 							this.registers[0xf] = 0;
-							this.registers[second_nibble] = added;
 						}
+						this.registers[second_nibble] = added & 0xffffffff;
 						break;
 					case 5:
 						//If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
@@ -362,7 +364,7 @@ class Chip8 {
 				// it wraps around to the opposite side of the screen
 
 				let spriteHeight = fourth_nibble;
-				let x = this.registers[second_nibble];
+
 				let y = this.registers[third_nibble];
 
 				//n-byte
@@ -372,13 +374,13 @@ class Chip8 {
 					if (y > 32) {
 						y -= 32;
 					}
-					x += 1;
+					let x = this.registers[second_nibble];
 					//loop through the byte
 					for (let bit = 0; bit < 8; bit++) {
+						x += 1;
 						if (x > 64) {
 							x -= 64;
 						}
-
 						let currentBit = (currentByte >> (7 - bit)) & 1;
 
 						if (currentBit !== 0) {
@@ -386,8 +388,6 @@ class Chip8 {
 						}
 
 						graphics.display[x + y * 64] ^= currentBit;
-
-						//graphics.render();
 					}
 				}
 
@@ -451,22 +451,44 @@ class Chip8 {
 						break;
 					case 0x33:
 						//Store BCD representation of Vx in memory locations I, I+1, and I+2.
+						//The interpreter takes the decimal value of Vx,
+						//and places the hundreds digit in memory at location in I,
+						//the tens digit at location I+1, and the ones digit at location I+2.
+						// console.log(this.registers[second_nibble]); //137
+						// console.log(
+						// 	Math.floor(this.registers[second_nibble] / 100)
+						// );
+						// console.log(
+						// 	Math.floor(
+						// 		(this.registers[second_nibble] % 100) / 10
+						// 	)
+						// );
+						// console.log(
+						// 	Math.floor(this.registers[second_nibble] % 10)
+						// );
+						console.log(this.registerI[0]);
 						this.memory[this.registerI[0]] = Math.floor(
-							(this.registers[second_nibble] / 100) % 10
+							this.registers[second_nibble] / 100
 						);
 						this.memory[this.registerI[0] + 1] = Math.floor(
-							(this.registers[third_nibble] / 10) % 10
+							(this.registers[second_nibble] % 100) / 10
 						);
-						this.memory[this.registerI[0] + 2] =
-							this.registers[third_nibble] % 10;
+
+						this.memory[this.registerI[0] + 2] = Math.floor(
+							this.registers[second_nibble] % 10
+						);
 						break;
 					case 0x55:
-						//Store registers V0 through Vx in memory starting at location I.
-						for (let i; i < second_nibble + 1; ++i) {
+						//0xf155 Store registers V0 through Vx in memory starting at location I.
+						//The interpreter copies the values of registers V0 through Vx into memory,
+						//starting at the address in I.
+
+						for (let i = 0; i < second_nibble + 1; i++) {
 							this.memory[this.registerI[0] + i] = this.registers[
 								i
 							];
 						}
+
 						break;
 					case 0x65:
 						//The interpreter reads values from memory starting at location I into registers V0 through Vx.
@@ -490,7 +512,7 @@ class Chip8 {
 	};
 }
 
-var test = [0xd5, 0x35, 0xff, 0xff];
+var test = [0x00, 0x00, 0x00, 0x00];
 
 var vm = new Chip8(test);
 vm.run();
