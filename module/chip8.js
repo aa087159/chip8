@@ -1,11 +1,17 @@
 import Graphics from './graphics.js';
 import Keyboard from './keyboard.js';
+import Sound from './Sound.js';
 
 const graphics = new Graphics(15);
 const keyboard = new Keyboard();
+const sound = new Sound();
+
+let loop;
+
+let fps = 60, fpsInterval, startTime, now, then, elapsed;
 
 class Chip8 {
-	constructor(test) {
+	constructor() {
 		// Create our memory with 4,096 bytes
 		this.memory = new Uint8Array(4096);
 		// Program counter, where we get our instructions from
@@ -20,147 +26,93 @@ class Chip8 {
 		//sound timer and delay timer
 		this.ST = 0;
 		this.DT = 0;
-		const sprites = [
-			0xf0,
-			0x90,
-			0x90,
-			0x90,
-			0xf0, // 0
-			0x20,
-			0x60,
-			0x20,
-			0x20,
-			0x70, // 1
-			0xf0,
-			0x10,
-			0xf0,
-			0x80,
-			0xf0, // 2
-			0xf0,
-			0x10,
-			0xf0,
-			0x10,
-			0xf0, // 3
-			0x90,
-			0x90,
-			0xf0,
-			0x10,
-			0x10, // 4
-			0xf0,
-			0x80,
-			0xf0,
-			0x10,
-			0xf0, // 5
-			0xf0,
-			0x80,
-			0xf0,
-			0x90,
-			0xf0, // 6
-			0xf0,
-			0x10,
-			0x20,
-			0x40,
-			0x40, // 7
-			0xf0,
-			0x90,
-			0xf0,
-			0x90,
-			0xf0, // 8
-			0xf0,
-			0x90,
-			0xf0,
-			0x10,
-			0xf0, // 9
-			0xf0,
-			0x90,
-			0xf0,
-			0x90,
-			0x90, // A
-			0xe0,
-			0x90,
-			0xe0,
-			0x90,
-			0xe0, // B
-			0xf0,
-			0x80,
-			0x80,
-			0x80,
-			0xf0, // C
-			0xe0,
-			0x90,
-			0x90,
-			0x90,
-			0xe0, // D
-			0xf0,
-			0x80,
-			0xf0,
-			0x80,
-			0xf0, // E
-			0xf0,
-			0x80,
-			0xf0,
-			0x80,
-			0x80, // F
-		];
 
-		//load sprite
+		this.paused=false
+
+	}
+
+	loadSpritesIntoMemory=()=>{
+		const sprites = [
+			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+			0x20, 0x60, 0x20, 0x20, 0x70, // 1
+			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+		];
 		for (let i = 0; i < sprites.length; i++) {
 			this.memory[i] = sprites[i];
 		}
-		// for (let i = 0; i < test.length; i++) {
-		// 	this.memory[0x200 + i] = test[i];
-		// }
 	}
 
-	loadRom(romName) {
-		var request = new XMLHttpRequest();
-		request.onload = () => {
-			// If the request response has content
-			if (request.response) {
-				let program = new Uint8Array(request.response);
+	loadRom = async(romName)=> {
+		const response = await fetch(`../${romName}`)
+		const arrayBuffer = await response.arrayBuffer()
+		const program = new Uint8Array(arrayBuffer)
+		for (let i = 0; i < program.length; i++) {
+			this.memory[0x200 + i] = program[i];
+		}
+	}	
 
-				// load the starting program into memory starting at address 0
-				for (let i = 0; i < program.length; i++) {
-					if (i % 10 === 0) {
-						graphics.render();
-					}
-					this.memory[0x200 + i] = program[i];
+	updateTimers() {
+		if (this.DT > 0) {
+			this.DT -= 1;
+		}
+	
+		if (this.ST > 0) {
+			this.ST -= 1;
+		}
+	}
+	playSound() {
+		if (this.ST > 0) {
+			sound.play(440);
+		} else {
+			sound.stop();
+		}
+	}
+
+	step = () => {
+		now = Date.now();
+		elapsed = now - startTime;
+	
+		if (elapsed > fpsInterval) {
+			keyboard.eventHandler();
+			graphics.render();
+
+			for (let i = 0; i < 10; i++) {
+				if(!this.paused){
+					this.dispatch(); 
 				}
 			}
-		};
-
-		// Initialize a GET request to retrieve the ROM from our roms folder
-		request.open('GET', '../' + romName);
-		request.responseType = 'arraybuffer';
-		request.send();
+			if (!this.paused) {
+				this.updateTimers();
+			}
+		
+			this.playSound();
+		}
+	
+		loop = requestAnimationFrame(this.step);
 	}
 
-	run = async () => {
-		this.loadRom('test_opcode.ch8');
-		await sleep(1000);
-		function sleep(ms) {
-			return new Promise((resolve) => setTimeout(resolve, ms));
-		}
-
-		for (let j = 0; j < 50000; j++) {
-			for (let i = 0; i < 10; i++) {
-				this.dispatch();
-			}
-			await sleep(5);
-			graphics.render();
-		}
-		//var should_run = true;
-		// for (let i = 0; i < 1; i++) {
-		// 	this.dispatch();
-		// 	graphics.render();
-		// }
-		// while (should_run) {
-		// 	should_run = this.dispatch();
-		// 	graphics.render();
-		// }
-		//this.dispatch();
-		//keyboard.eventHandler();
-	};
+	run = async() =>{
+		fpsInterval = 1000 / fps;
+		then = Date.now();
+		startTime = then;
+	
+		this.loadSpritesIntoMemory();
+		await this.loadRom('SpaceInvaders.ch8')
+		loop = requestAnimationFrame(this.step);
+	}
 
 	dispatch = () => {
 		const first_byte = this.memory[this.pc];
@@ -395,19 +347,21 @@ class Chip8 {
 			case 0xe:
 				if (last_two_nibbles === 0x9e) {
 					//Ex9E Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
+					//console.log(this.registers[second_nibble]);
 					if (
 						keyboard.chip8keys[
-							this.registers[second_nibble] - 1
-						] === 1
+							this.registers[second_nibble]-1
+						]
 					) {
+						
 						this.pc += 2;
 					}
 				} else if (last_two_nibbles === 0xa1) {
 					//ExA1 Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
 					if (
-						keyboard.chip8keys[
+						!keyboard.chip8keys[
 							this.registers[second_nibble] - 1
-						] === 0
+						]
 					) {
 						this.pc += 2;
 					}
@@ -422,12 +376,11 @@ class Chip8 {
 						break;
 					case 0x0a:
 						//All execution stops until a key is pressed, then the value of that key is stored in Vx.
-						let pause = true;
-
-						while (pause) {
+						
+						while (!this.paused) {
 							document.addEventListener('keydown', (e) => {
 								this.registers[second_nibble] = e.key;
-								pause = false;
+								paused = false;
 							});
 						}
 						break;
@@ -466,7 +419,6 @@ class Chip8 {
 						// console.log(
 						// 	Math.floor(this.registers[second_nibble] % 10)
 						// );
-						console.log(this.registerI[0]);
 						this.memory[this.registerI[0]] = Math.floor(
 							this.registers[second_nibble] / 100
 						);
@@ -483,16 +435,15 @@ class Chip8 {
 						//The interpreter copies the values of registers V0 through Vx into memory,
 						//starting at the address in I.
 
-						for (let i = 0; i < second_nibble + 1; i++) {
+						for (let i = 0; i <= second_nibble; i++) {
 							this.memory[this.registerI[0] + i] = this.registers[
 								i
 							];
 						}
-
 						break;
 					case 0x65:
 						//The interpreter reads values from memory starting at location I into registers V0 through Vx.
-						for (let i; i < second_nibble + 1; ++i) {
+						for (let i = 0; i <= second_nibble; i++) {
 							this.registers[i] = this.memory[
 								this.registerI[0] + i
 							];
@@ -512,9 +463,6 @@ class Chip8 {
 	};
 }
 
-var test = [0x00, 0x00, 0x00, 0x00];
 
-var vm = new Chip8(test);
+var vm = new Chip8();
 vm.run();
-// graphics.testRender();
-// graphics.render();

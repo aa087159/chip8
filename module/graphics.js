@@ -23,6 +23,9 @@ class Graphics {
 	}
 
 	render() {
+		// Clears the display every render cycle
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		
 		// loop through display
 		for (let y = 0; y < this.rows; y++) {
 			for (let x = 0; x < this.cols; x++) {
@@ -44,7 +47,6 @@ class Graphics {
 		for (let i = 0; i < 10; i++) {
 			this.placePixel(i + 5, 5);
 		}
-
 		// this.placePixel(0, 0);
 		// this.placePixel(15, 2);
 	}

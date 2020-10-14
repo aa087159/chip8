@@ -26,7 +26,7 @@ class Keyboard {
 			if (this.userKeys.includes(e.key)) {
 				const keyIndex = this.userKeys.indexOf(e.key);
 				this.chip8keys[keyIndex] = 1;
-				console.log(this.chip8keys);
+				//console.log(this.chip8keys);
 			} else {
 				return;
 			}
@@ -36,7 +36,7 @@ class Keyboard {
 			if (this.userKeys.includes(e.key)) {
 				const keyIndex = this.userKeys.indexOf(e.key);
 				this.chip8keys[keyIndex] = 0;
-				console.log(this.chip8keys);
+				//console.log(this.chip8keys);
 			} else {
 				return;
 			}
@@ -45,3 +45,34 @@ class Keyboard {
 }
 
 export default Keyboard;
+
+
+
+// cycle() {
+// 	for (let i = 0; i < this.speed; i++) {
+// 		if (!this.paused) {
+// 			this.dispatch();
+// 		}
+// 	}
+// }
+
+// init=() =>{
+// 	fpsInterval = 1000 / fps;
+// 	then = Date.now();
+// 	startTime = then;
+
+// 	this.loadSpritesIntoMemory();
+// 	this.loadRom('TETRIS'); 
+// 	loop = this.step();
+// }
+
+// step=()=> {
+// 	now = Date.now();
+// 	elapsed = now - then;
+
+// 	if (elapsed > fpsInterval) {
+// 		cpu.cycle(); // NEW
+// 	}
+
+// 	loop =  this.step();
+// }
