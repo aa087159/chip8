@@ -25,13 +25,13 @@ class Graphics {
 	render() {
 		// Clears the display every render cycle
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		
+
 		// loop through display
 		for (let y = 0; y < this.rows; y++) {
 			for (let x = 0; x < this.cols; x++) {
-				let i = x + y * this.cols;
+				let i = x + 1 + y * this.cols + this.cols;
 				if (this.display[i]) {
-					this.ctx.fillStyle = '#000';
+					this.ctx.fillStyle = '#d200ff';
 					this.ctx.fillRect(
 						x * this.scale,
 						y * this.scale,
@@ -44,11 +44,10 @@ class Graphics {
 	}
 
 	testRender() {
-		for (let i = 0; i < 10; i++) {
-			this.placePixel(i + 5, 5);
-		}
-		// this.placePixel(0, 0);
-		// this.placePixel(15, 2);
+		// for (let i = 0; i < 10; i++) {
+		// 	this.placePixel(i + 5, 5);
+		// }
+		this.placePixel(64, 0);
 	}
 }
 

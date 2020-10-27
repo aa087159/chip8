@@ -1,0 +1,77 @@
+<html class="theme1">
+	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+	<body>
+		<div class="main-container">
+
+			<div class="player-inner">
+				<aside class="player-sides left">
+					<div class="control-container">
+						<div class="control-button control-button-left unmuteIcon"></div>
+						<div class="control-button control-button-right infoButtonclicked"></div>
+					</div>
+			
+					<div class="start-container">
+						<div class="start-button start-button-top"></div>
+						<div class="powerFlash"></div>
+						<div class="start-button start-button-down"></div>
+						<div class="colorSwitch"><i class="fas fa-sun"></i></div>
+					</div>
+				</aside>
+			
+				<div class="player-middle">
+					<div class="screen">
+						
+						<div class="glass"></div>            
+						<canvas style="display: none"></canvas>
+					</div>   
+					<select class="rom-loader">
+						<option disabled="" selected="">Select a ROM</option>
+					</select>
+				</div>
+			
+				<aside class="player-sides right">
+					<div class="direction-circle">
+							<div class="direction-button up"></div>
+							<div class="direction-button right"></div>
+							<div class="direction-button down"></div>
+							<div class="direction-button left"></div>
+							<div class="direction-button middle"></div>
+					</div>
+			
+					<div class="sound-container">
+						<div class="speaker"></div>
+						<div class="speaker"></div>
+						<div class="speaker"></div>
+						<div class="speaker"></div>
+						<div class="speaker"></div>
+						<div class="speaker"></div>
+					</div>
+				</aside>
+			</div>
+
+			<div class="infoBox">
+				<div class="instruction openInfoBox">
+				<div class="key-container">
+				</div>
+				<div class="information">
+					<h1>Instruction: </h1>
+					<div class="instructions"></div>
+				</div>
+			</div>
+			</div>
+
+			<div class="credit">
+				<div class="githubIcon"><i class="fab fa-github"></i></div>
+				<p>Made by <a href="https://github.com/aa087159" target="_blank">Ting-Wei Chang</a></p>
+	
+			</div>
+		</div>
+		<script>
+			window.FontAwesomeConfig = {
+			  searchPseudoElements: true
+			}
+		  </script>
+		<script type="module" src="./app.js"></script>
+	</body>
+</html>

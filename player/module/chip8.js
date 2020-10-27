@@ -2,13 +2,7 @@ import Graphics from './graphics.js';
 import Keyboard from './keyboard.js';
 import Sound from './Sound.js';
 
-const graphics = new Graphics(15);
-const keyboard = new Keyboard();
-const sound = new Sound();
-
-let loop;
-
-let fps = 60, fpsInterval, startTime, now, then, elapsed;
+let fpsInterval, startTime, now, elapsed;
 
 class Chip8 {
 	constructor() {
@@ -27,92 +21,171 @@ class Chip8 {
 		this.ST = 0;
 		this.DT = 0;
 
-		this.paused=false
+		this.paused = false;
 
+		this.running = false;
+
+		this.graphics = new Graphics(10);
+		this.keyboard = new Keyboard();
+		this.sound = new Sound();
 	}
 
-	loadSpritesIntoMemory=()=>{
+	loadSpritesIntoMemory = () => {
 		const sprites = [
-			0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-			0x20, 0x60, 0x20, 0x20, 0x70, // 1
-			0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-			0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-			0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-			0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-			0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-			0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-			0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-			0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-			0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-			0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-			0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-			0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-			0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-			0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+			0xf0,
+			0x90,
+			0x90,
+			0x90,
+			0xf0, // 0
+			0x20,
+			0x60,
+			0x20,
+			0x20,
+			0x70, // 1
+			0xf0,
+			0x10,
+			0xf0,
+			0x80,
+			0xf0, // 2
+			0xf0,
+			0x10,
+			0xf0,
+			0x10,
+			0xf0, // 3
+			0x90,
+			0x90,
+			0xf0,
+			0x10,
+			0x10, // 4
+			0xf0,
+			0x80,
+			0xf0,
+			0x10,
+			0xf0, // 5
+			0xf0,
+			0x80,
+			0xf0,
+			0x90,
+			0xf0, // 6
+			0xf0,
+			0x10,
+			0x20,
+			0x40,
+			0x40, // 7
+			0xf0,
+			0x90,
+			0xf0,
+			0x90,
+			0xf0, // 8
+			0xf0,
+			0x90,
+			0xf0,
+			0x10,
+			0xf0, // 9
+			0xf0,
+			0x90,
+			0xf0,
+			0x90,
+			0x90, // A
+			0xe0,
+			0x90,
+			0xe0,
+			0x90,
+			0xe0, // B
+			0xf0,
+			0x80,
+			0x80,
+			0x80,
+			0xf0, // C
+			0xe0,
+			0x90,
+			0x90,
+			0x90,
+			0xe0, // D
+			0xf0,
+			0x80,
+			0xf0,
+			0x80,
+			0xf0, // E
+			0xf0,
+			0x80,
+			0xf0,
+			0x80,
+			0x80, // F
 		];
 		for (let i = 0; i < sprites.length; i++) {
 			this.memory[i] = sprites[i];
 		}
-	}
+	};
 
-	loadRom = async(romName)=> {
-		const response = await fetch(`../${romName}`)
-		const arrayBuffer = await response.arrayBuffer()
-		const program = new Uint8Array(arrayBuffer)
+	loadRom = async (romName) => {
+		const response = await fetch(`../games/${romName}`);
+		const arrayBuffer = await response.arrayBuffer();
+		const program = new Uint8Array(arrayBuffer);
 		for (let i = 0; i < program.length; i++) {
 			this.memory[0x200 + i] = program[i];
 		}
-	}	
+	};
+
+	stop = () => {
+		this.memory = 0;
+		this.running = false;
+		this.graphics = 0;
+	};
 
 	updateTimers() {
 		if (this.DT > 0) {
 			this.DT -= 1;
 		}
-	
+
 		if (this.ST > 0) {
 			this.ST -= 1;
 		}
 	}
 	playSound() {
 		if (this.ST > 0) {
-			sound.play(440);
+			this.sound.play(440);
 		} else {
-			sound.stop();
+			this.sound.stop();
 		}
 	}
 
 	step = () => {
 		now = Date.now();
 		elapsed = now - startTime;
-	
-		if (elapsed > fpsInterval) {
-			keyboard.eventHandler();
-			graphics.render();
 
-			for (let i = 0; i < 10; i++) {
-				if(!this.paused){
-					this.dispatch(); 
+		if (elapsed > fpsInterval) {
+			this.keyboard.eventHandler();
+			if (!this.graphics) {
+				return;
+			} else {
+				this.graphics.testRender();
+				this.graphics.render();
+			}
+
+			for (let i = 0; i < 2; i++) {
+				if (!this.paused) {
+					this.dispatch();
 				}
 			}
 			if (!this.paused) {
 				this.updateTimers();
 			}
-		
+
 			this.playSound();
 		}
-	
-		loop = requestAnimationFrame(this.step);
-	}
+		window.requestAnimationFrame(this.step);
+	};
 
-	run = async() =>{
-		fpsInterval = 1000 / fps;
-		then = Date.now();
-		startTime = then;
-	
+	run = async (rom) => {
+		this.running = true;
+		fpsInterval = 1000 / 60;
+		startTime = Date.now();
+
 		this.loadSpritesIntoMemory();
-		await this.loadRom('SpaceInvaders.ch8')
-		loop = requestAnimationFrame(this.step);
-	}
+		await this.loadRom(rom);
+		window.requestAnimationFrame(this.step);
+	};
 
 	dispatch = () => {
 		const first_byte = this.memory[this.pc];
@@ -141,7 +214,7 @@ class Chip8 {
 			case 0x0:
 				if (last_three_nibbles === 0x0e0) {
 					//Clear the display.
-					graphics.clear();
+					this.graphics.clear();
 				} else if (last_three_nibbles === 0x0ee) {
 					//The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 					this.pc = this.stack[this.stackpointer];
@@ -336,10 +409,12 @@ class Chip8 {
 						let currentBit = (currentByte >> (7 - bit)) & 1;
 
 						if (currentBit !== 0) {
-							this.registers[0xf] = graphics.display[x + y * 64];
+							this.registers[0xf] = this.graphics.display[
+								x + y * 64
+							];
 						}
 
-						graphics.display[x + y * 64] ^= currentBit;
+						this.graphics.display[x + y * 64] ^= currentBit;
 					}
 				}
 
@@ -349,17 +424,16 @@ class Chip8 {
 					//Ex9E Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
 					//console.log(this.registers[second_nibble]);
 					if (
-						keyboard.chip8keys[
-							this.registers[second_nibble]-1
+						this.keyboard.chip8keys[
+							this.registers[second_nibble] - 1
 						]
 					) {
-						
 						this.pc += 2;
 					}
 				} else if (last_two_nibbles === 0xa1) {
 					//ExA1 Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
 					if (
-						!keyboard.chip8keys[
+						!this.keyboard.chip8keys[
 							this.registers[second_nibble] - 1
 						]
 					) {
@@ -376,7 +450,7 @@ class Chip8 {
 						break;
 					case 0x0a:
 						//All execution stops until a key is pressed, then the value of that key is stored in Vx.
-						
+
 						while (!this.paused) {
 							document.addEventListener('keydown', (e) => {
 								this.registers[second_nibble] = e.key;
@@ -407,18 +481,6 @@ class Chip8 {
 						//The interpreter takes the decimal value of Vx,
 						//and places the hundreds digit in memory at location in I,
 						//the tens digit at location I+1, and the ones digit at location I+2.
-						// console.log(this.registers[second_nibble]); //137
-						// console.log(
-						// 	Math.floor(this.registers[second_nibble] / 100)
-						// );
-						// console.log(
-						// 	Math.floor(
-						// 		(this.registers[second_nibble] % 100) / 10
-						// 	)
-						// );
-						// console.log(
-						// 	Math.floor(this.registers[second_nibble] % 10)
-						// );
 						this.memory[this.registerI[0]] = Math.floor(
 							this.registers[second_nibble] / 100
 						);
@@ -463,6 +525,7 @@ class Chip8 {
 	};
 }
 
+export default Chip8;
 
-var vm = new Chip8();
-vm.run();
+// var vm = new Chip8();
+// vm.run('TETRIS');

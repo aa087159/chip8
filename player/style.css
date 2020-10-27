@@ -1,0 +1,636 @@
+/* PLAYER */
+
+* {
+	box-sizing: border-box;
+}
+
+:root {
+	--brown: #906964;
+	--red: #e84d35;
+	--darkBrown: #402f44;
+	--black: #000;
+	--transp-black: rgba(0, 0, 0, 0.1);
+	--stroke: 4px solid #402f44;
+	--darkYellow: #de9a49;
+	--white: #fff;
+}
+
+.theme1 {
+	--BG: #ffefcc;
+	--yellow: #fdc750;
+	--green: #dae8c1;
+	--glass: #e4eed1;
+	--grey: #666b80;
+	--keyboardBG: #d1cebe;
+	--keyShadow1: #402f44;
+	--keyShadow2: rgba(255, 255, 255, 0.5);
+	--keyboardBorder: #402f44;
+	--infoBoxShadow: none;
+	--keyGlow: none;
+	--screenPadding: #393c45;
+	--screenBottom: #402f44;
+	--glassOpacity: 1;
+	--startButton: #000;
+}
+
+.theme2 {
+	--BG: #37345a;
+	--yellow: #c550b3;
+	--green: #2d3126;
+	--glass: #b9b9b9;
+	--grey: #393c45;
+	--keyboardBG: #1d0e21;
+	--keyShadow1: #b90453;
+	--keyShadow2: #c92aef;
+	--keyboardBorder: #c92aef;
+	--infoBoxShadow: 0 0 8px #58f4ff;
+	--keyGlow: 0 0 0px #fff, 0 0 30px #fff, 0 0 40px #fff, 0 0 5px #ff4da6,
+		0 0 0px #fff, 0 0 2px #fff, 0 0 1px #ff4da6;
+	--screenPadding: #7c8293;
+	--screenBottom: #211b22;
+	--glassOpacity: 0.1;
+	--startButton: #fff;
+}
+
+body {
+	background-color: var(--BG);
+}
+
+.main-container {
+	margin-top: 50px;
+}
+
+/* Canvas */
+canvas {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: -1px;
+	top: 0px;
+	border: none;
+	background-color: var(--black);
+}
+
+.rom-loader {
+	position: absolute;
+	width: 127px;
+	height: 23px;
+	bottom: 3px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: transparent;
+	border: 1px solid var(--white);
+	border-radius: 8px;
+	color: white;
+	background-color: var(--black);
+	font-size: 12px;
+	cursor: pointer;
+	font-family: monospace;
+}
+
+.player-inner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/*Sides*/
+
+.player-sides {
+	width: 100px;
+	height: 305px;
+	border-radius: 50px 0 0 50px;
+	border: var(--stroke);
+	text-align: center;
+	position: relative;
+	background-color: var(--yellow);
+}
+
+.left {
+	box-shadow: inset -9px -10px var(--transp-black),
+		inset 11px 10px rgba(255, 255, 255, 0.3),
+		inset 5px 5px rgba(255, 255, 255, 0.9);
+}
+
+.right {
+	transform: scale(-1, 1);
+	box-shadow: inset -6px 6px rgba(255, 255, 255, 0.7),
+		inset -12px 0 rgba(255, 255, 255, 0.3),
+		inset 10px -5px var(--transp-black);
+}
+
+/*Left side--- red buttons*/
+.start-container {
+	width: 80px;
+	height: 80px;
+	position: absolute;
+}
+
+.start-button {
+	position: absolute;
+	width: 21px;
+	height: 57px;
+	border-radius: 33px;
+	background-color: var(--brown);
+	border: 3px solid var(--darkBrown);
+	transform: translateX(-50%) rotate(45deg);
+	left: 50%;
+	top: 30px;
+	box-shadow: 2px 0px var(--darkBrown),
+		inset 0px -3px rgba(255, 255, 255, 0.4),
+		inset 3px 0px rgba(255, 255, 255, 1);
+	cursor: pointer;
+	font-family: monospace;
+}
+
+.start-button:active {
+	box-shadow: 1px 0px var(--darkBrown), inset -2px -4px rgba(0, 0, 0, 0.2),
+		inset 3px 0px rgba(0, 0, 0, 1);
+}
+
+@keyframes powerFlashing {
+	to {
+		box-shadow: 0 0 8px #ff0000;
+	}
+}
+
+.powerFlash {
+	position: absolute;
+	top: 28px;
+	left: 63px;
+	width: 10px;
+	height: 10px;
+	border-radius: 100%;
+	border: 2px solid var(--darkBrown);
+	background-color: var(--white);
+}
+
+.powerFlashOn {
+	background-color: var(--red);
+	animation: powerFlashing 0.5s infinite;
+}
+
+.start-button::after {
+	position: absolute;
+	width: 3px;
+	height: 39px;
+	top: 19px;
+	left: 37px;
+	transform: rotate(-90deg);
+	color: var(--startButton);
+}
+
+.start-button-top::after {
+	content: 'power';
+}
+
+.start-button-down::after {
+	content: 'mode';
+}
+
+.start-button-down {
+	top: 91px;
+}
+
+.colorSwitch {
+	position: absolute;
+	top: 84px;
+	right: 2px;
+}
+
+/*Left side--- red buttons*/
+.control-container {
+	width: 91px;
+	height: 42px;
+	border-radius: 33px;
+	background-color: var(--darkYellow);
+	border: 3px solid var(--darkBrown);
+	transform: rotate(45deg);
+	position: absolute;
+	bottom: 37px;
+	left: -1px;
+	box-shadow: 3px 0px var(--darkBrown),
+		inset -2px -3px rgba(255, 255, 255, 0.2),
+		inset 3px 0px rgba(255, 255, 255, 0.6);
+}
+
+.control-button {
+	width: 32px;
+	height: 32px;
+	background-color: var(--red);
+	/* border: 4px solid var(--black); */
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: inset -4px -1px var(--darkBrown),
+		inset -1px -5px rgba(255, 255, 255, 0.4),
+		inset 3px 0px rgba(255, 255, 255, 1);
+}
+
+.control-button:active {
+	box-shadow: inset -3px -1px rgba(0, 0, 0, 1),
+		inset -1px -5px rgba(0, 0, 0, 0.4), inset 3px 0px rgba(0, 0, 0, 1);
+}
+
+.control-button-left {
+	position: absolute;
+	top: 2px;
+	left: 7px;
+}
+
+.control-button-left::after {
+}
+
+.muteIcon::after {
+	content: '\f6a9';
+	font-family: 'Font Awesome 5 Free';
+	width: 17px;
+	height: 5px;
+	position: absolute;
+	left: 2px;
+	top: 8px;
+	color: var(--white);
+	font-weight: 900;
+	transform: rotate(-45deg);
+}
+
+.unmuteIcon::after {
+	content: '\f027';
+	font-family: 'Font Awesome 5 Free';
+	width: 17px;
+	height: 5px;
+	position: absolute;
+	left: 2px;
+	top: 8px;
+	color: var(--white);
+	font-weight: 900;
+	transform: rotate(-45deg);
+}
+
+.control-button-right {
+	position: absolute;
+	left: 47px;
+	top: 2px;
+}
+
+.infoButtonclicked:after {
+	color: #4a4edf !important;
+}
+
+.control-button-right::after {
+	content: '\f129';
+	font-family: 'Font Awesome 5 Free';
+	width: 17px;
+	height: 5px;
+	position: absolute;
+	left: 2px;
+	top: 8px;
+	color: var(--white);
+	font-weight: 900;
+	transform: rotate(-45deg);
+}
+
+/* PLAYER Middle*/
+.player-middle {
+	/* responsive screen */
+	/* min-width: 150px;
+	overflow: hidden; */
+	width: 450px;
+	height: 290px;
+	position: relative;
+	padding: 5px 5px 15px 5px;
+	background-color: var(--screenPadding);
+
+	border-top: var(--stroke);
+	border-bottom: var(--stroke);
+	box-shadow: inset -5px -95px 46px var(--screenBottom);
+}
+
+.screen {
+	position: relative;
+	/* width: 370px;
+	height: 236px; */
+	height: 100%;
+	border: 18px solid var(--darkBrown);
+	background-color: var(--green);
+	border-radius: 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.screen .glass,
+.screen .glass:after,
+.screen .glass:before {
+	position: absolute;
+	background-color: var(--glass);
+}
+
+.screen .glass {
+	width: 150%;
+	height: 23%;
+	transform: rotate(-45deg);
+	left: -193px;
+	opacity: var(--glassOpacity);
+}
+
+.screen .glass:after {
+	content: '';
+	width: 100%;
+	height: 12px;
+	right: -75px;
+	top: 128px;
+}
+
+.screen .glass:before {
+	content: '';
+	width: 90%;
+	height: 50%;
+	right: -90px;
+	top: 169px;
+}
+
+/*right-side Direction-controller*/
+.direction-circle {
+	position: absolute;
+	width: 70px;
+	height: 70px;
+	background-color: var(--darkYellow);
+	border: 4px solid var(--darkBrown);
+	border-radius: 50%;
+	top: 60px;
+	right: 9px;
+}
+
+.direction-button {
+	width: 17px;
+	height: 17px;
+	border: none;
+	position: absolute;
+	background-color: var(--brown);
+}
+
+.direction-circle .up {
+	left: 50%;
+	top: 6px;
+	transform: translateX(-50%);
+	border-top: 4px solid var(--white);
+	box-shadow: -0.3vmin 0 var(--darkBrown), -0.3vmin -0.3vmin var(--darkBrown),
+		0 -0.3vmin var(--darkBrown), 0.3vmin -0.3vmin var(--darkBrown),
+		0.3vmin 0 var(--darkBrown);
+}
+
+.direction-circle .right {
+	right: 6px;
+	top: 50%;
+	transform: translateY(-50%);
+	border-top: 4px solid var(--white);
+	box-shadow: 0 -0.3vmin var(--darkBrown), 0.3vmin -0.3vmin var(--darkBrown),
+		0.3vmin 0 var(--darkBrown), 0.3vmin 0.3vmin var(--darkBrown),
+		0 0.3vmin var(--darkBrown), 0.3vmin 0.6vmin var(--darkBrown);
+}
+
+.direction-circle .left {
+	left: 5px;
+	top: 50%;
+	transform: translateY(-50%);
+	border-top: 4px solid var(--white);
+	box-shadow: 0 -0.3vmin var(--darkBrown), -0.3vmin -0.3vmin var(--darkBrown),
+		-0.3vmin 0 var(--darkBrown), -0.3vmin 0.3vmin var(--darkBrown),
+		0 0.3vmin var(--darkBrown), -0.3vmin 0.6vmin var(--darkBrown);
+}
+
+.direction-circle .down {
+	bottom: 6px;
+	left: 50%;
+	transform: translateX(-50%);
+	box-shadow: -0.3vmin 0 var(--darkBrown), -0.3vmin 0.3vmin var(--darkBrown),
+		0 0.3vmin var(--darkBrown), 0.3vmin 0.3vmin var(--darkBrown),
+		0.3vmin 0 var(--darkBrown), -0.3vmin 0.6vmin var(--darkBrown),
+		0.3vmin 0.6vmin var(--darkBrown);
+}
+
+.direction-circle .middle {
+	width: 18px;
+	height: 18px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.direction-circle .middle::after {
+	content: '';
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border: 3px solid var(--darkBrown);
+	border-radius: 50%;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.direction-circle .middle::before {
+	content: '';
+	width: 4px;
+	height: 8px;
+	border-bottom-right-radius: 50px;
+	border-top-right-radius: 50px;
+	border: 3px solid var(--white);
+	border-left: 0;
+	position: absolute;
+	right: 3px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/*right-side sound-container */
+.sound-container {
+	position: absolute;
+	bottom: 0px;
+	left: -9px;
+	width: 80px;
+	height: 49px;
+	transform: rotate(45deg);
+}
+
+.speaker {
+	position: absolute;
+	width: 4px;
+	height: 33px;
+	background-color: var(--darkBrown);
+	border-radius: 30px;
+}
+
+.speaker:first-child {
+	right: 24px;
+}
+
+.speaker:nth-child(2) {
+	right: 32px;
+}
+
+.speaker:nth-child(3) {
+	right: 40px;
+}
+
+.speaker:nth-child(4) {
+	right: 48px;
+}
+.speaker:nth-child(5) {
+	right: 56px;
+}
+
+.speaker:nth-child(6) {
+	right: 64px;
+}
+
+/* keys */
+.instruction {
+	border: 3px solid var(--keyboardBorder);
+	border-radius: 9px;
+	background: var(--keyboardBG);
+	max-width: 600px;
+	max-height: 240px;
+	padding: 10px;
+	overflow: hidden;
+	display: flex;
+	box-shadow: var(--infoBoxShadow);
+}
+
+.closeInfoBox {
+	/* animation: closeInfoBox 0.5s ease-out; */
+	animation: closeHorizontally 0.5s ease-out,
+		closeVertically 0.3s ease-out 0.5s, closeLast 0.08s ease-out 0.7s;
+	animation-fill-mode: forwards;
+}
+
+.openInfoBox {
+	animation: openHorizontally 0.5s ease-out, openVertically 0.3s ease-out 0.5s;
+	animation-fill-mode: forwards;
+}
+
+.infoBox {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+@keyframes openHorizontally {
+	from {
+		max-width: 0px;
+		max-height: 0px;
+		transform: translateX(-295px);
+	}
+	to {
+		max-width: 600px;
+		max-height: 0px;
+		transform: translateX(0px);
+	}
+}
+
+@keyframes openVertically {
+	from {
+		max-width: 600px;
+		max-height: 0px;
+	}
+	to {
+		max-width: 600px;
+		max-height: 240px;
+	}
+}
+
+@keyframes closeHorizontally {
+	from {
+		max-width: 600px;
+		transform: translateX(0px);
+	}
+	to {
+		max-width: 10px;
+		transform: translateX(-295px);
+	}
+}
+
+@keyframes closeVertically {
+	from {
+		max-height: 240px;
+	}
+	to {
+		max-height: 10px;
+	}
+}
+
+@keyframes closeLast {
+	from {
+		max-height: 10px;
+	}
+	to {
+		transform: scale(0);
+	}
+}
+
+.key-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	width: 292px;
+	height: 200px;
+}
+
+.key-group {
+	display: flex;
+	align-items: center;
+}
+
+.key {
+	width: 60px;
+	height: 45px;
+	text-align: center;
+	background-color: var(--grey);
+	border: 3px solid var(--darkBrown);
+	border-radius: 5px;
+	padding: 8px;
+	font-size: 21px;
+	margin: 3px;
+	color: var(--white);
+	user-select: none;
+	box-shadow: inset -3px -2px var(--keyShadow1),
+		inset 7px 0 rgba(255, 255, 255, 0.2), inset 3px 3px var(--keyShadow2);
+
+	cursor: pointer;
+	text-shadow: var(--keyGlow);
+}
+
+.key:active {
+	box-shadow: inset -1px 0px var(--black),
+		inset 6px 5px rgba(255, 255, 255, 0.1), inset 3px 2px var(--darkBrown);
+}
+
+.information {
+	width: 300px;
+	height: 200px;
+	margin-left: 10px;
+	font-family: monospace;
+	color: var(--startButton);
+}
+
+.information h1 {
+	font-size: 20px;
+	margin-top: 0;
+}
+
+.info {
+}
+
+/* footer */
+.credit {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 5px;
+	font-family: monospace;
+	color: var(--startButton);
+}
+.credit a {
+	color: var(--startButton);
+}
