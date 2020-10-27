@@ -599,6 +599,7 @@ canvas {
 
 	cursor: pointer;
 	text-shadow: var(--keyGlow);
+	text-transform: capitalize;
 }
 
 .key:active {

@@ -45,14 +45,14 @@ class Keyboard {
 		//Event: key clicked on display
 		const displayedKeys = document.querySelectorAll('.key');
 		displayedKeys.forEach((key) => {
-			key.addEventListener('mousedown', (e) => {
+			key.addEventListener('pointerdown', (e) => {
 				const keyIndex = this.userKeys.indexOf(e.target.innerHTML);
 				this.chip8keys[keyIndex] = 1;
 			});
 		});
 
 		displayedKeys.forEach((key) => {
-			key.addEventListener('mouseup', (e) => {
+			key.addEventListener('pointerup', (e) => {
 				const keyIndex = this.userKeys.indexOf(e.target.innerHTML);
 				this.chip8keys[keyIndex] = 0;
 			});
